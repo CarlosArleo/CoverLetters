@@ -1,3 +1,4 @@
+
 "use server";
 
 import { coverLetterGenerator } from "@/ai/flows/cover-letter-generator-flow";
@@ -15,7 +16,8 @@ export async function generateCoverLetterAction(data: {
     });
     
     // Check if the company intelligence step returned an error and throw it to the client.
-    if (result.companyIntelligence.companyName === 'Error') {
+    // The flow is now more resilient, but we can still check for a hard failure.
+    if (result.companyIntelligence.companyName.startsWith('Error:')) {
       throw new Error(result.companyIntelligence.companyMission);
     }
 

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -57,6 +58,7 @@ export const getCompanyIntelligenceTool = ai.defineTool(
   async (input) => {
     let homePageHtml = '';
     let aboutUsHtml = '';
+    let fetchError = '';
 
     try {
       // Fetch homepage
@@ -69,55 +71,53 @@ export const getCompanyIntelligenceTool = ai.defineTool(
       } else {
         homePageHtml = await homePageResponse.text();
       }
-
-      // Try to fetch about page, but don't fail if it doesn't exist
-      try {
-        const aboutUsUrl = new URL('/about', input.companyUrl).toString();
-        const aboutUsResponse = await fetch(aboutUsUrl);
-        if (aboutUsResponse.ok) {
-          aboutUsHtml = await aboutUsResponse.text();
-        }
-      } catch (e) {
-        // Ignore if about page doesn't exist or fails to fetch
-      }
-
-      if (!homePageHtml && !aboutUsHtml) {
-        return {
-          companyName: 'Error',
-          companyMission: 'Could not fetch any content from the provided URL.',
-          keyProjects: 'Could not fetch any content from the provided URL.',
-        }
-      }
-
-      const homePageDom = new JSDOM(homePageHtml);
-      const aboutUsDom = aboutUsHtml ? new JSDOM(aboutUsHtml) : null;
-
-      const combinedText = `${
-        homePageDom.window.document.body?.textContent || ''
-      }\n${aboutUsDom?.window.document.body?.textContent || ''}`.trim();
-      
-      if (!combinedText) {
-        return {
-          companyName: 'Error',
-          companyMission: 'No text content could be extracted from the URL.',
-          keyProjects: 'No text content could be extracted from the URL.',
-        }
-      }
-
-      const { output } = await companyIntelPrompt({
-        textContent: combinedText,
-      });
-
-      return output!;
     } catch (error: any) {
-      console.error('Error in getCompanyIntelligence tool:', error);
-      // Return a structured error that the calling flow can handle.
+        console.error('Error fetching homepage:', error);
+        fetchError = error.message;
+    }
+
+    if (!fetchError) {
+        // Try to fetch about page, but don't fail if it doesn't exist
+        try {
+          const aboutUsUrl = new URL('/about', input.companyUrl).toString();
+          const aboutUsResponse = await fetch(aboutUsUrl);
+          if (aboutUsResponse.ok) {
+            aboutUsHtml = await aboutUsResponse.text();
+          }
+        } catch (e) {
+          // Ignore if about page doesn't exist or fails to fetch
+        }
+    }
+
+
+    if (fetchError || (!homePageHtml && !aboutUsHtml)) {
       return {
-        companyName: 'Error',
-        companyMission: `Failed to extract company intelligence: ${error.message}`,
-        keyProjects: `Failed to extract company intelligence: ${error.message}`,
+        companyName: 'Error: URL Not Found',
+        companyMission: `Could not fetch any content from the provided URL. The server may be down or the URL is incorrect. (Details: ${fetchError || 'N/A'})`,
+        keyProjects: `Could not fetch any content from the provided URL. (Details: ${fetchError || 'N/A'})`,
       }
     }
+
+    const homePageDom = new JSDOM(homePageHtml);
+    const aboutUsDom = aboutUsHtml ? new JSDOM(aboutUsHtml) : null;
+
+    const combinedText = `${
+      homePageDom.window.document.body?.textContent || ''
+    }\n${aboutUsDom?.window.document.body?.textContent || ''}`.trim();
+    
+    if (!combinedText) {
+      return {
+        companyName: 'Error: No Content',
+        companyMission: 'No text content could be extracted from the URL.',
+        keyProjects: 'No text content could be extracted from the URL.',
+      }
+    }
+
+    const { output } = await companyIntelPrompt({
+      textContent: combinedText,
+    });
+
+    return output!;
   }
 );
 

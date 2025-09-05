@@ -1,3 +1,4 @@
+
 // src/ai/flows/cover-letter-generator-flow.ts
 'use server';
 
@@ -91,11 +92,11 @@ const letterWritingPrompt = ai.definePrompt({
 
   Instructions:
   - Analyze the user's profile, the company intelligence, and the job description.
-  - If the company intelligence or job description contains an error message, it means the information could not be retrieved. Acknowledge this limitation and write the best letter you can with the available information. For example, if company details are missing, address the letter more generally.
+  - If the company intelligence or job description contains an error message (e.g., "Could not fetch content", "Failed to extract"), it means the information could not be retrieved. Acknowledge this limitation and write the best letter you can with the available information. For example, if company details are missing, address the letter more generally.
   - Write a professional and compelling cover letter.
-  - The letter must be highly tailored. If the job description is available, directly reference its specific requirements and connect them to the user's experiences.
-  - Mention the company's mission or a specific project to demonstrate genuine interest and a good fit.
-  - If the job description was not available, state that you are writing to express interest in the company based on its mission and projects and how your skills could be a valuable asset.
+  - The letter must be highly tailored. If the job description is available and does not contain an error, directly reference its specific requirements and connect them to the user's experiences.
+  - If company intelligence is available and does not contain an error, mention the company's mission or a specific project to demonstrate genuine interest and a good fit.
+  - If the job description was not available or could not be retrieved, state that you are writing to express interest in the company based on its mission and projects and how your skills could be a valuable asset.
   - The tone should be professional, confident, and aligned with the user's extensive experience.
 
   Your final output should be ONLY the text of the cover letter, with nothing else.

@@ -1,7 +1,6 @@
 "use server";
 
 import { coverLetterGenerator } from "@/ai/flows/cover-letter-generator-flow";
-import { getCompanyIntelligenceTool } from "@/ai/flows/get-company-intelligence-tool";
 import { generateSubmissionEmail } from "@/ai/flows/generate-submission-email";
 
 export async function generateCoverLetterAction(data: {
@@ -9,20 +8,20 @@ export async function generateCoverLetterAction(data: {
   jobTitle?: string;
 }) {
   try {
+    // The main flow now handles everything and returns all necessary data.
     const result = await coverLetterGenerator({
       companyUrl: data.companyUrl,
       jobTitle: data.jobTitle,
     });
-
-    // We still need to get company intelligence separately to display in the UI.
-    // This call should be more resilient now.
-    const companyIntelligence = await getCompanyIntelligenceTool({
-      companyUrl: data.companyUrl,
-    });
+    
+    // Check if the company intelligence step returned an error and throw it to the client.
+    if (result.companyIntelligence.companyName === 'Error') {
+      throw new Error(result.companyIntelligence.companyMission);
+    }
 
     return {
       coverLetter: result.coverLetter,
-      companyIntelligence,
+      companyIntelligence: result.companyIntelligence,
     };
   } catch (error: any) {
     console.error("Error generating cover letter:", error);

@@ -25,6 +25,11 @@ export type CoverLetterGeneratorInput = z.infer<typeof CoverLetterGeneratorInput
 
 const CoverLetterGeneratorOutputSchema = z.object({
   coverLetter: z.string().describe('The generated cover letter.'),
+  companyIntelligence: z.object({
+    companyName: z.string(),
+    companyMission: z.string(),
+    keyProjects: z.string(),
+  }).describe('The intelligence gathered about the company.'),
 });
 
 export type CoverLetterGeneratorOutput = z.infer<typeof CoverLetterGeneratorOutputSchema>;
@@ -38,15 +43,12 @@ const getJobDescriptionTool = ai.defineTool({
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      // Instead of throwing, return a clear failure message.
-      // The LLM can then report that it couldn't get the description.
       const errorText = `Failed to fetch job description. Status: ${response.status} ${response.statusText}`;
       console.error(errorText);
       return errorText;
     }
     const html = await response.text();
     const dom = new JSDOM(html);
-    // A simple approach to get all text. More complex logic might be needed for specific sites.
     const textContent = dom.window.document.body.textContent || '';
     if (!textContent.trim()) {
       return `No text content found at the provided URL: ${url}`;
@@ -54,8 +56,7 @@ const getJobDescriptionTool = ai.defineTool({
     return textContent;
   } catch (error: any) {
     console.error('Error in getJobDescriptionTool:', error);
-    // Return a message indicating failure, which the main prompt can handle.
-    return `Failed to retrieve job description from ${url}. The URL might be invalid or the server unreachable.`;
+    return `Failed to retrieve job description from ${url}. The URL might be invalid, blocked, or the server unreachable. Error: ${error.message}`;
   }
 });
 
@@ -64,42 +65,41 @@ export async function coverLetterGenerator(input: CoverLetterGeneratorInput): Pr
   return coverLetterGeneratorFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'coverLetterPrompt',
+const letterWritingPrompt = ai.definePrompt({
+  name: 'letterWritingPrompt',
   input: {schema: z.object({
     userProfile: z.string(),
-    companyUrl: z.string(),
+    companyIntelligence: z.any(),
+    jobDescription: z.string(),
     jobTitle: z.string().optional(),
   })},
-  output: {schema: CoverLetterGeneratorOutputSchema},
-  tools: [getCompanyIntelligenceTool, getJobDescriptionTool],
-  prompt: `You are an expert career strategist and cover letter writer. Your task is to generate a highly personalized and compelling cover letter by following these steps:
+  output: {schema: z.object({ coverLetter: z.string() })},
+  prompt: `You are an expert career strategist and cover letter writer. Your task is to generate a highly personalized and compelling cover letter by synthesizing the provided information.
 
-Step 1: Company and Job Analysis
-- Use the 'getCompanyIntelligence' tool with the provided 'companyUrl' to understand the company's name, mission, and key projects.
-- Use the 'getJobDescription' tool with the same 'companyUrl' to get the full text of the job description. If you receive an error message from this tool, note that the job description could not be retrieved and proceed without it.
+  User's Profile:
+  {{{userProfile}}}
 
-Step 2: Synthesis
-- Analyze the user's profile provided below.
-- Analyze the company intelligence you retrieved.
-- Analyze the job description you retrieved. If the description is unavailable, focus on the alignment between the user's profile and the company's mission and projects.
-- Identify the key skills, experiences, and values from the user's profile that are most relevant to the job description (if available) and the company's mission.
+  Company Intelligence:
+  - Company Name: {{{companyIntelligence.companyName}}}
+  - Company Mission: {{{companyIntelligence.companyMission}}}
+  - Key Projects: {{{companyIntelligence.keyProjects}}}
 
-Step 3: Write the Cover Letter
-- Based on your synthesis, write a professional and compelling cover letter.
-- The letter must be highly tailored. If the job description is available, directly reference its specific requirements and connect them to the user's experiences.
-- Mention the company's mission or a specific project to demonstrate genuine interest and a good fit.
-- If the job description was not available, state that you are writing to express interest in the company based on its mission and projects and how your skills could be a valuable asset.
-- The tone should be professional, confident, and aligned with the user's extensive experience.
+  Job Description:
+  {{{jobDescription}}}
 
-Your final output should be ONLY the text of the cover letter, with nothing else.
+  Job Title: {{{jobTitle}}}
 
-User Profile (from cv.md and research.md):
-{{{userProfile}}}
+  Instructions:
+  - Analyze the user's profile, the company intelligence, and the job description.
+  - If the company intelligence or job description contains an error message, it means the information could not be retrieved. Acknowledge this limitation and write the best letter you can with the available information. For example, if company details are missing, address the letter more generally.
+  - Write a professional and compelling cover letter.
+  - The letter must be highly tailored. If the job description is available, directly reference its specific requirements and connect them to the user's experiences.
+  - Mention the company's mission or a specific project to demonstrate genuine interest and a good fit.
+  - If the job description was not available, state that you are writing to express interest in the company based on its mission and projects and how your skills could be a valuable asset.
+  - The tone should be professional, confident, and aligned with the user's extensive experience.
 
-Job Title: {{{jobTitle}}}
-Company/Job URL: {{{companyUrl}}}
-`,
+  Your final output should be ONLY the text of the cover letter, with nothing else.
+  `,
 });
 
 const coverLetterGeneratorFlow = ai.defineFlow(
@@ -116,11 +116,23 @@ const coverLetterGeneratorFlow = ai.defineFlow(
     const researchContent = readFileSync(researchPath, 'utf-8');
     const userProfile = cvContent + '\n' + researchContent;
 
-    const {output} = await prompt({
-      ...input,
+    // Step 1: Get company intelligence
+    const companyIntelligence = await getCompanyIntelligenceTool(input);
+
+    // Step 2: Get job description
+    const jobDescription = await getJobDescriptionTool({ url: input.companyUrl });
+
+    // Step 3: Generate the cover letter
+    const { output } = await letterWritingPrompt({
       userProfile,
+      companyIntelligence,
+      jobDescription,
+      jobTitle: input.jobTitle,
     });
 
-    return output!;
+    return {
+      coverLetter: output!.coverLetter,
+      companyIntelligence: companyIntelligence,
+    };
   }
 );

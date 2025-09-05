@@ -39,6 +39,8 @@ const companyIntelPrompt = ai.definePrompt({
 
 Given the following text content extracted from a company's website (including their home and about pages), extract the company's name, its mission statement, and any key projects or products mentioned.
 
+If the text content indicates a failure to retrieve information, please state that in the output fields.
+
 Text Content:
 {{{textContent}}}
 `,
@@ -74,17 +76,17 @@ export const getCompanyIntelligenceTool = ai.defineTool(
         const aboutUsResponse = await fetch(aboutUsUrl);
         if (aboutUsResponse.ok) {
           aboutUsHtml = await aboutUsResponse.text();
-        } else {
-          console.warn(
-            `Could not fetch about page at ${aboutUsUrl}, proceeding without it.`
-          );
         }
       } catch (e) {
-        console.warn(`Error fetching about page, proceeding without it:`, e);
+        // Ignore if about page doesn't exist or fails to fetch
       }
 
       if (!homePageHtml && !aboutUsHtml) {
-        throw new Error('Could not fetch any content from the provided URL.');
+        return {
+          companyName: 'Error',
+          companyMission: 'Could not fetch any content from the provided URL.',
+          keyProjects: 'Could not fetch any content from the provided URL.',
+        }
       }
 
       const homePageDom = new JSDOM(homePageHtml);
@@ -92,18 +94,29 @@ export const getCompanyIntelligenceTool = ai.defineTool(
 
       const combinedText = `${
         homePageDom.window.document.body?.textContent || ''
-      }\n${aboutUsDom?.window.document.body?.textContent || ''}`;
+      }\n${aboutUsDom?.window.document.body?.textContent || ''}`.trim();
+      
+      if (!combinedText) {
+        return {
+          companyName: 'Error',
+          companyMission: 'No text content could be extracted from the URL.',
+          keyProjects: 'No text content could be extracted from the URL.',
+        }
+      }
 
       const { output } = await companyIntelPrompt({
-        textContent: combinedText.trim(),
+        textContent: combinedText,
       });
 
       return output!;
     } catch (error: any) {
       console.error('Error in getCompanyIntelligence tool:', error);
-      // Return a structured error that the calling flow can handle if needed,
-      // or rethrow to be caught by the action handler.
-      throw new Error(`Failed to extract company intelligence: ${error.message}`);
+      // Return a structured error that the calling flow can handle.
+      return {
+        companyName: 'Error',
+        companyMission: `Failed to extract company intelligence: ${error.message}`,
+        keyProjects: `Failed to extract company intelligence: ${error.message}`,
+      }
     }
   }
 );

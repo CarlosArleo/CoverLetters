@@ -64,22 +64,30 @@ const generateSubmissionEmailPrompt = ai.definePrompt({
   5.  **Paragraph 3 (The Sinker):** Reference the attached cover letter and CV for details. The "ask" for a conversation must be framed as a forward-looking offer of collaboration and connect the consultant's expertise to the company's specific projects mentioned in the cover letter to create relevance.
   6.  **Closing:** End with a professional closing like "Sincerely," followed by the consultant's name and title.
 
-  CRITICAL FORMATTING INSTRUCTIONS:
-  - The final output must be a clean JSON object with "subject" and "body" keys.
-  - The "body" text must be ready to copy and paste. Use actual line breaks between paragraphs (a double line break). Do not use "\\n" characters.
-  
-  Example Body Structure:
-  Dear [Hiring Manager],
-  
-  [Paragraph 1]
-  
-  [Paragraph 2]
-  
-  [Paragraph 3]
-  
-  Sincerely,
-  
-  [Name]
+  FORMAT_OUTPUT_INSTRUCTIONS: "
+CRITICAL: Format all text output for professional copy-paste use:
+- Insert two line breaks between paragraphs.
+- Add a line break after the greeting.
+- Add a line break before the closing.
+- Add a line break after 'Sincerely,'.
+- Add a line break before the name/title.
+- The final output must be a single string. DO NOT use markdown, and use actual line breaks, not \\n characters.
+
+Example structure:
+Dear [Name],
+
+[Paragraph 1]
+
+[Paragraph 2]
+
+[Paragraph 3]
+
+Sincerely,
+
+[Name]
+[Title]
+
+Apply this formatting to the complete response."
   `,
 });
 
@@ -94,4 +102,3 @@ const generateSubmissionEmailFlow = ai.defineFlow(
     return output!;
   }
 );
-

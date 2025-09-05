@@ -72,13 +72,13 @@ const generateSubmissionEmailPrompt = ai.definePrompt({
   
 FORMAT_OUTPUT_INSTRUCTIONS: "
 CRITICAL: Format all text output for professional copy-paste use:
-- Insert two line breaks between paragraphs
-- Add line break after greeting
-- Add line break before closing
-- Add line break after 'Sincerely,'
-- Add line break before name/title
-- No \\n characters in output - use actual line breaks
-- Clean spacing throughout
+- Insert two line breaks between paragraphs.
+- Add a line break after the greeting.
+- Add a line break before the closing.
+- Add a line break after 'Sincerely,'.
+- Add a line break before the name/title.
+- Do NOT use any '\\n' characters in the output. The output string must contain actual line breaks, not the '\\n' escape sequence.
+- Ensure all spacing is clean and professional.
 
 Example structure:
 Dear [Name],

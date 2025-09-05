@@ -44,56 +44,68 @@ Text Content:
 `,
 });
 
-export const getCompanyIntelligenceTool =
-  ai.defineTool(
-    {
-      name: 'getCompanyIntelligence',
-      description: 'Retrieves company name, mission, and key projects from a company website by scraping its home and "about us" pages.',
-      inputSchema: GetCompanyIntelligenceInputSchema,
-      outputSchema: GetCompanyIntelligenceOutputSchema,
-    },
-    async input => {
+export const getCompanyIntelligenceTool = ai.defineTool(
+  {
+    name: 'getCompanyIntelligence',
+    description:
+      'Retrieves company name, mission, and key projects from a company website by scraping its home and "about us" pages.',
+    inputSchema: GetCompanyIntelligenceInputSchema,
+    outputSchema: GetCompanyIntelligenceOutputSchema,
+  },
+  async (input) => {
+    let homePageHtml = '';
+    let aboutUsHtml = '';
+
+    try {
+      // Fetch homepage
+      const homePageResponse = await fetch(input.companyUrl);
+      if (!homePageResponse.ok) {
+        console.warn(
+          `Failed to fetch home page: ${homePageResponse.statusText}`
+        );
+        // Continue without it if it fails
+      } else {
+        homePageHtml = await homePageResponse.text();
+      }
+
+      // Try to fetch about page, but don't fail if it doesn't exist
       try {
         const aboutUsUrl = new URL('/about', input.companyUrl).toString();
-        
-        const [homePageResponse, aboutUsResponse] = await Promise.all([
-          fetch(input.companyUrl),
-          fetch(aboutUsUrl).catch(e => {
-            console.warn(`Could not fetch about page at ${aboutUsUrl}, proceeding without it.`);
-            return null;
-          })
-        ]);
-
-        if (!homePageResponse.ok) {
-          throw new Error(
-            `Failed to fetch home page: ${homePageResponse.statusText}`
+        const aboutUsResponse = await fetch(aboutUsUrl);
+        if (aboutUsResponse.ok) {
+          aboutUsHtml = await aboutUsResponse.text();
+        } else {
+          console.warn(
+            `Could not fetch about page at ${aboutUsUrl}, proceeding without it.`
           );
         }
-        
-        const homePageHtml = await homePageResponse.text();
-        const aboutUsHtml = (aboutUsResponse && aboutUsResponse.ok)
-          ? await aboutUsResponse.text()
-          : '';
-
-        const homePageDom = new JSDOM(homePageHtml);
-        const aboutUsDom = aboutUsHtml ? new JSDOM(aboutUsHtml) : null;
-
-        const combinedText = `${
-          homePageDom.window.document.body?.textContent || ''
-        }\n${aboutUsDom?.window.document.body?.textContent || ''}`;
-        
-        const {output} = await companyIntelPrompt({
-          textContent: combinedText.trim(),
-        });
-
-        return output!;
-      } catch (error: any) {
-        console.error('Error in getCompanyIntelligence tool:', error);
-        throw new Error(
-          `Failed to extract company intelligence: ${error.message}`
-        );
+      } catch (e) {
+        console.warn(`Error fetching about page, proceeding without it:`, e);
       }
+
+      if (!homePageHtml && !aboutUsHtml) {
+        throw new Error('Could not fetch any content from the provided URL.');
+      }
+
+      const homePageDom = new JSDOM(homePageHtml);
+      const aboutUsDom = aboutUsHtml ? new JSDOM(aboutUsHtml) : null;
+
+      const combinedText = `${
+        homePageDom.window.document.body?.textContent || ''
+      }\n${aboutUsDom?.window.document.body?.textContent || ''}`;
+
+      const { output } = await companyIntelPrompt({
+        textContent: combinedText.trim(),
+      });
+
+      return output!;
+    } catch (error: any) {
+      console.error('Error in getCompanyIntelligence tool:', error);
+      // Return a structured error that the calling flow can handle if needed,
+      // or rethrow to be caught by the action handler.
+      throw new Error(`Failed to extract company intelligence: ${error.message}`);
     }
-  );
+  }
+);
 
 export type CompanyIntelligenceTool = typeof getCompanyIntelligenceTool;

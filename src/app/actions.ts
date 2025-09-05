@@ -9,14 +9,13 @@ export async function generateCoverLetterAction(data: {
   jobTitle?: string;
 }) {
   try {
-    // The coverLetterGenerator flow now implicitly uses the necessary tools.
     const result = await coverLetterGenerator({
       companyUrl: data.companyUrl,
       jobTitle: data.jobTitle,
     });
-    
+
     // We still need to get company intelligence separately to display in the UI.
-    // The LLM call inside the flow does not return this data to the action.
+    // This call should be more resilient now.
     const companyIntelligence = await getCompanyIntelligenceTool({
       companyUrl: data.companyUrl,
     });
@@ -25,9 +24,10 @@ export async function generateCoverLetterAction(data: {
       coverLetter: result.coverLetter,
       companyIntelligence,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating cover letter:", error);
-    throw new Error("Failed to generate cover letter. Please check the URL and try again.");
+    // The error message from the tool will now be more specific.
+    throw new Error(error.message);
   }
 }
 
@@ -43,7 +43,7 @@ export async function generateEmailAction(data: {
       companyName: data.companyName,
     });
     return email;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating submission email:", error);
     throw new Error("Failed to generate submission email.");
   }

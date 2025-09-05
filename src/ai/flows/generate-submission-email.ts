@@ -45,17 +45,29 @@ const generateSubmissionEmailPrompt = ai.definePrompt({
   output: {
     schema: GenerateSubmissionEmailOutputSchema,
   },
-  prompt: `You are an AI assistant specialized in writing professional job application emails.
+  prompt: `You are an expert career strategist and communications coach. Your task is to draft a peer-to-peer professional outreach email.
 
-  Given the following cover letter, job title, and company name, generate a concise and compelling submission email.
-  The email should have a subject line and a body. The email should be professional and tailored to the job and company.
+  CONTEXT:
+  - Cover Letter: {{{coverLetter}}}
+  - Job Title: {{{jobTitle}}}
+  - Company Name: {{{companyName}}}
 
-  Cover Letter: {{{coverLetter}}}
-  Job Title: {{{jobTitle}}}
-  Company Name: {{{companyName}}}
+  PSYCHOLOGICAL PRINCIPLES TO FOLLOW:
+  - Use "conversation" language, never "meeting."
+  - Position this as a peer-to-peer professional dialogue.
+  - Frame the submission as an offer to explore mutual value.
+  - Show genuine interest in their specific work/initiatives by referencing details from the cover letter.
+  - Make the request for a "conversation" feel collaborative and low-pressure, not transactional.
 
-  Subject: (Write an appropriate email subject line here)
-  Body: (Write the body of the email here)
+  EMAIL STRUCTURE:
+  1.  Subject Line: Create a professional subject line. If a job title is provided, use it. Otherwise, use a title like "A Conversation on Regenerative Systems & [Company Name]".
+  2.  Personal Connection: Start with a brief, genuine connection to the company's mission or work, drawing from the sentiment in the cover letter.
+  3.  Value Proposition: Write a concise, one-sentence summary of the unique value proposition presented in the cover letter.
+  4.  Reference Attachments: Clearly state that the attached cover letter and CV provide comprehensive details.
+  5.  The "Ask": Use collaborative language to request a brief conversation. For example: "I'd welcome the opportunity for a brief conversation about how my expertise might complement your current initiatives." or "I'd love to discuss how my background in [Relevant Area] could contribute to [Company Name]'s innovative work."
+  6.  Closing: End with a professional closing.
+
+  Your final output must be a JSON object with two keys: "subject" and "body".
   `,
 });
 

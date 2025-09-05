@@ -14,7 +14,7 @@ export async function generateCoverLetterAction(data: {
         companyUrl: data.companyUrl,
         jobTitle: data.jobTitle,
       }),
-      getCompanyIntelligenceTool.run({
+      getCompanyIntelligenceTool({
         companyUrl: data.companyUrl,
       }),
     ]);

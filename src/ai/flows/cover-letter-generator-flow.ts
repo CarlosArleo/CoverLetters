@@ -13,6 +13,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { readFileSync } from 'fs';
 import path from 'path';
+import { getCompanyIntelligenceTool } from './get-company-intelligence-tool';
+import { JSDOM } from 'jsdom';
 
 const CoverLetterGeneratorInputSchema = z.object({
   companyUrl: z.string().describe('The URL of the company website or job posting.'),
@@ -27,34 +29,27 @@ const CoverLetterGeneratorOutputSchema = z.object({
 
 export type CoverLetterGeneratorOutput = z.infer<typeof CoverLetterGeneratorOutputSchema>;
 
-
-const GetCompanyIntelligenceToolInputSchema = z.object({
-  companyUrl: z.string().describe('The URL of the company website to scrape.'),
+const getJobDescriptionTool = ai.defineTool({
+  name: 'getJobDescriptionTool',
+  description: 'Scrapes a job posting URL to extract the full job description text.',
+  inputSchema: z.object({ jobUrl: z.string().url() }),
+  outputSchema: z.string(),
+}, async ({ jobUrl }) => {
+  try {
+    const response = await fetch(jobUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch job description: ${response.statusText}`);
+    }
+    const html = await response.text();
+    const dom = new JSDOM(html);
+    // A simple approach to get all text. More complex logic might be needed for specific sites.
+    return dom.window.document.body.textContent || '';
+  } catch (error: any) {
+    console.error('Error in getJobDescriptionTool:', error);
+    // Return a message indicating failure, which the main prompt can handle.
+    return `Failed to retrieve job description from ${jobUrl}. Please check the URL.`;
+  }
 });
-
-const GetCompanyIntelligenceToolOutputSchema = z.object({
-  name: z.string().describe('The name of the company.'),
-  mission: z.string().describe('The mission of the company.'),
-  keyProjects: z.string().describe('Key projects of the company.'),
-});
-
-const getCompanyIntelligenceTool = ai.defineTool({
-  name: 'getCompanyIntelligenceTool',
-  description: 'Scrapes a company website and extracts the company name, mission, and key projects.',
-  inputSchema: GetCompanyIntelligenceToolInputSchema,
-  outputSchema: GetCompanyIntelligenceToolOutputSchema,
-}, async (input) => {
-  // TODO: Implement web scraping and AI prompt to extract data
-  // Placeholder implementation for demonstration purposes
-
-  // Dummy data for testing, replace with actual implementation.
-  return {
-    name: 'Example Company',
-    mission: 'To provide innovative solutions.',
-    keyProjects: 'AI Development, Cloud Services',
-  };
-});
-
 
 export async function coverLetterGenerator(input: CoverLetterGeneratorInput): Promise<CoverLetterGeneratorOutput> {
   return coverLetterGeneratorFlow(input);
@@ -62,9 +57,17 @@ export async function coverLetterGenerator(input: CoverLetterGeneratorInput): Pr
 
 const prompt = ai.definePrompt({
   name: 'coverLetterPrompt',
-  input: {schema: CoverLetterGeneratorInputSchema},
+  input: {schema: z.object({
+    userProfile: z.string(),
+    companyName: z.string(),
+    companyMission: z.string(),
+    companyKeyProjects: z.string(),
+    jobDescription: z.string(),
+    jobTitle: z.string().optional(),
+    companyUrl: z.string(),
+  })},
   output: {schema: CoverLetterGeneratorOutputSchema},
-  tools: [getCompanyIntelligenceTool],
+  tools: [getCompanyIntelligenceTool, getJobDescriptionTool],
   prompt: `You are an expert cover letter writer. Use the provided information to create a compelling and personalized cover letter.
 
   User Profile (from cv.md and research.md): {{{userProfile}}}
@@ -74,8 +77,8 @@ const prompt = ai.definePrompt({
   Write a cover letter that is tailored to the job description and highlights the user's relevant skills and experience. Make sure to include information about the company's mission and key projects.
   Job Title: {{{jobTitle}}}
   Company URL: {{{companyUrl}}}
-  `,// Added companyUrl, jobTitle for context
-  system: `You are an expert at writing cover letters.  You will be given a job description, information about the company, and a user profile.  Your goal is to write a cover letter that is tailored to the job description and highlights the user's relevant skills and experience.  Use the getCompanyIntelligenceTool if the company name, mission, and key projects are not known.`,// Added a system prompt.
+  `,
+  system: `You are an expert at writing cover letters. You will be given a user profile and a job title. You MUST use the getCompanyIntelligenceTool to learn about the company and the getJobDescriptionTool to get the full job description from the provided URL. Your goal is to write a cover letter that is tailored to the job description and highlights the user's relevant skills and experience.`,
 });
 
 const coverLetterGeneratorFlow = ai.defineFlow(
@@ -92,22 +95,18 @@ const coverLetterGeneratorFlow = ai.defineFlow(
     const researchContent = readFileSync(researchPath, 'utf-8');
     const userProfile = cvContent + '\n' + researchContent;
 
-    // Scrape job description from URL
-    // TODO: Implement web scraping logic here (or use a tool) to get the jobDescription
-    const jobDescription = 'This is a placeholder for the job description scraped from the URL.';
-
-    // Get company intelligence using the tool
-    const companyIntelligence = await getCompanyIntelligenceTool({
-      companyUrl: input.companyUrl,
-    });
+    // The AI will call the tools as needed based on the system prompt.
+    // We get company intelligence and job description via tools.
+    const companyIntelligence = await getCompanyIntelligenceTool({ companyUrl: input.companyUrl });
+    const jobDescription = await getJobDescriptionTool({ jobUrl: input.companyUrl });
 
     const {output} = await prompt({
       ...input,
-      userProfile: userProfile,
-      companyName: companyIntelligence.name,
-      companyMission: companyIntelligence.mission,
+      userProfile,
+      companyName: companyIntelligence.companyName,
+      companyMission: companyIntelligence.companyMission,
       companyKeyProjects: companyIntelligence.keyProjects,
-      jobDescription: jobDescription, // Pass the scraped job description
+      jobDescription,
     });
 
     return output!;

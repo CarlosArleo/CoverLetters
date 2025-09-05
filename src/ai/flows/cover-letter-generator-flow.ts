@@ -104,13 +104,12 @@ const letterWritingPrompt = ai.definePrompt({
   
 FORMAT_OUTPUT_INSTRUCTIONS: "
 CRITICAL: Format all text output for professional copy-paste use:
-- Insert two line breaks between paragraphs
-- Add line break after greeting
-- Add line break before closing
-- Add line break after 'Sincerely,'
-- Add line break before name/title
-- No \\n characters in output - use actual line breaks
-- Clean spacing throughout
+- Insert two line breaks between paragraphs.
+- Add a line break after the greeting.
+- Add a line break before the closing.
+- Add a line break after 'Sincerely,'.
+- Add a line break before the name/title.
+- The final output must be a single string. DO NOT use markdown, and use actual line breaks, not \\n characters.
 
 Example structure:
 Dear [Name],

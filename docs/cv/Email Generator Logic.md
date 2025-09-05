@@ -33,7 +33,11 @@ If the AI knows you are applying for a specific role (e.g., "Regenerative Design
 
 If you are making a speculative application to a company without a specific role in mind, the AI's instructions change to be more strategic:
 
-*   **Create a "Synergy Hook":** The AI's primary task is to synthesize the entire cover letter down to **one or two compelling sentences**. This "hook" must explain the core synergy—*why* you are a uniquely good fit for *their specific company*.
+*   **Create a "Synergy Hook":** The AI's primary task is to synthesize the entire cover letter down to **one or two compelling sentences**. This "hook" must explain the core synergy—*why* you are a uniquely good fit for *their specific company*. Specifically, highlight:
+    *   **Technical Architecture:** Reference the use of cloud-based AI frameworks (e.g., Firebase Genkit, Google AI Studio) and nature-inspired AI systems (e.g., self-correcting regenerative loops) to process multimodal data.
+    *   **Key Features:** Mention relevant tools like the Geospatial Intelligence Module for GIS enhancement or Disparate Impact Identification System for equity/biodiversity impact simulations, tying them to the company's projects (e.g., GMSF, ecological services).
+    *   **Ethical and Regenerative Aspects:** Emphasize human-in-the-loop oversight, transparency, and biomimetic principles (e.g., adaptability) to align with the company's ecological and social goals.
+    *   **Phased Roadmap:** Note the scalable development plan (e.g., MVP in 3-6 months, full deployment in 9-12 months) as a collaboration opportunity.
 *   **Generate Intrigue:** The goal is not to tell the whole story in the email, but to generate enough intrigue to get the recipient to open the attachments.
 *   **Peer-to-Peer Tone:** The tone is respectful but confident, framed as one expert reaching out to another to explore potential collaboration.
 

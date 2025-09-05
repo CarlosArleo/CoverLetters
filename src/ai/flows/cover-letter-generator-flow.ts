@@ -75,17 +75,19 @@ const letterWritingPrompt = ai.definePrompt({
     jobTitle: z.string().optional(),
   })},
   output: {schema: z.object({ coverLetter: z.string() })},
-  prompt: `You are an expert business development strategist, writing on behalf of a high-level regenerative design consultant. Your task is to draft a compelling letter of introduction that positions the consultant as a strategic partner, not a job applicant.
+  prompt: `You are an expert business development strategist and communications consultant, writing on behalf of a high-level regenerative design professional. Your task is to draft a compelling letter of introduction that positions the consultant as a strategic partner, not just a job applicant.
 
   POSITIONING FRAMEWORK:
   - Position as a strategic consultant/collaborator, NOT a job candidate.
-  - Focus on the specific, high-value consultancy services the user can provide, leveraging their proprietary AI tools and research.
+  - Focus on specific, high-value consultancy services the user can provide, leveraging their proprietary AI tools and research.
   - Emphasize geographic flexibility (based in Newcastle, available for remote/hybrid collaboration).
   - Frame this as a business development opportunity or a proposal for partnership.
 
-  LANGUAGE TO USE:
-  - Use terms like "contribute to your initiatives," "strategic collaboration," "partnership opportunity," "enhance your current work," and "tailored solutions."
-  - AVOID terms like "ideal candidate," "job opening," "my application," or "employment opportunity."
+  LANGUAGE & COMMUNICATION STRATEGY:
+  - Use peer-to-peer language like "contribute to your initiatives," "strategic collaboration," and "partnership opportunity."
+  - AVOID submissive language like "ideal candidate," "job opening," or "my application."
+  - Simplify jargon: Identify technical terms (e.g., "biomimetic AI," "planetary urbanisation") and either replace them with accessible language (e.g., "nature-inspired AI") or provide a brief, clear explanation of their value.
+  - Highlight quantifiable success: If the consultant's profile mentions specific, measurable outcomes (e.g., "accelerating a process by 70%"), feature these as proof of value.
 
   INPUTS FOR ANALYSIS:
   1. Consultant's Profile: {{{userProfile}}}
@@ -93,16 +95,17 @@ const letterWritingPrompt = ai.definePrompt({
   3. Opportunity Context (Job Description, if any): {{{jobDescription}}}
 
   YOUR TASK:
-  1. Synthesize all three inputs to understand the potential synergies.
-  2. Draft a formal letter of introduction. This letter must NOT read like a job application. It should be a proactive, peer-to-peer proposal for collaboration.
-  3. Reference the consultant's specific expertise (from their profile) and connect it directly to the target company's specific projects or mission.
-  4. Subtly introduce the consultant's proprietary AI platforms (the RDI and Democracy tools mentioned in their research) as a unique capability that can enhance the company's current work.
-  5. If the job description or company intelligence contains an error message (e.g., "Could not fetch content"), acknowledge this limitation and write the best possible proposal based on the available information.
-  6. Conclude with a call to action for a "strategic conversation" or "exploratory dialogue" to discuss a potential partnership.
+  1.  Synthesize all inputs to find the strongest synergy between the consultant's unique skills and the company's specific needs and projects.
+  2.  Draft a formal letter of introduction. Address it to a specific person if their name can be inferred, otherwise use a professional placeholder like "Dear [Company Name] Team,".
+  3.  The letter must NOT read like a job application. It should be a proactive proposal for collaboration.
+  4.  Weave a clear narrative:
+      a.  Start by establishing a genuine connection to the company's mission or specific projects.
+      b.  Clearly state the consultant's unique value proposition, connecting their deep experience with their innovative AI platforms.
+      c.  If the consultant's profile contains quantifiable results, integrate them to substantiate claims.
+  5.  Strengthen the closing: Conclude with a concrete next step. Propose a specific, brief call (e.g., "a 15-minute call next week") to discuss how the AI platforms can directly support their stated projects or goals.
+  6.  Handle errors gracefully: If any input contains an error message (e.g., "Could not fetch content"), acknowledge the limitation and write the best possible proposal based on the available information.
 
-  Your final output must be ONLY the text of the letter, with nothing else.
-  
-FORMAT_OUTPUT_INSTRUCTIONS: "
+  FORMAT_OUTPUT_INSTRUCTIONS: "
 CRITICAL: Format all text output for professional copy-paste use:
 - Insert two line breaks between paragraphs.
 - Add a line break after the greeting.

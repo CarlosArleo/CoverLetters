@@ -100,13 +100,33 @@ const letterWritingPrompt = ai.definePrompt({
   5. If the job description or company intelligence contains an error message (e.g., "Could not fetch content"), acknowledge this limitation and write the best possible proposal based on the available information.
   6. Conclude with a call to action for a "strategic conversation" or "exploratory dialogue" to discuss a potential partnership.
 
-  TEXT FORMATTING REQUIREMENTS:
-  - Use proper paragraph breaks (double line breaks between paragraphs).
-  - Ensure clean, copy-paste ready output.
-  - Add line breaks before and after key sections (e.g., greeting, body paragraphs, closing).
-  - Use consistent spacing throughout.
-
   Your final output must be ONLY the text of the letter, with nothing else.
+  
+FORMAT_OUTPUT_INSTRUCTIONS: "
+CRITICAL: Format all text output for professional copy-paste use:
+- Insert two line breaks between paragraphs
+- Add line break after greeting
+- Add line break before closing
+- Add line break after 'Sincerely,'
+- Add line break before name/title
+- No \\n characters in output - use actual line breaks
+- Clean spacing throughout
+
+Example structure:
+Dear [Name],
+
+[Paragraph 1]
+
+[Paragraph 2]
+
+[Paragraph 3]
+
+Sincerely,
+
+[Name]
+[Title]
+
+Apply this formatting to the complete response."
   `,
 });
 

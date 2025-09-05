@@ -9,13 +9,14 @@ export async function generateCoverLetterAction(data: {
   jobTitle?: string;
 }) {
   try {
+    // The coverLetterGenerator flow now implicitly uses the necessary tools.
     const result = await coverLetterGenerator({
       companyUrl: data.companyUrl,
       jobTitle: data.jobTitle,
     });
     
-    // The company intelligence is now implicitly handled within the coverLetterGenerator flow.
-    // We can call it again here to get the data for the UI.
+    // We still need to get company intelligence separately to display in the UI.
+    // The LLM call inside the flow does not return this data to the action.
     const companyIntelligence = await getCompanyIntelligenceTool({
       companyUrl: data.companyUrl,
     });

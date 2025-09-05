@@ -64,19 +64,28 @@ const prompt = ai.definePrompt({
   })},
   output: {schema: CoverLetterGeneratorOutputSchema},
   tools: [getCompanyIntelligenceTool, getJobDescriptionTool],
-  prompt: `You are an expert cover letter writer. Your task is to generate a personalized and compelling cover letter based on the provided user profile and job details.
+  prompt: `You are an expert career strategist and cover letter writer. Your task is to generate a highly personalized and compelling cover letter by following these steps:
+
+Step 1: Company and Job Analysis
+- Use the 'getCompanyIntelligence' tool with the provided 'companyUrl' to understand the company's name, mission, and key projects.
+- Use the 'getJobDescription' tool with the same 'companyUrl' to get the full text of the job description.
+
+Step 2: Synthesis
+- Analyze the user's profile provided below.
+- Analyze the company intelligence you retrieved.
+- Analyze the job description you retrieved.
+- Identify the key skills, experiences, and values from the user's profile that are most relevant to the job description and the company's mission.
+
+Step 3: Write the Cover Letter
+- Based on your synthesis, write a professional and compelling cover letter.
+- The letter must be highly tailored. Directly reference the specific requirements from the job description and connect them to the user's experiences.
+- Mention the company's mission or a specific project to demonstrate genuine interest and a good fit.
+- The tone should be professional, confident, and aligned with the user's extensive experience.
+
+Your final output should be ONLY the text of the cover letter, with nothing else.
 
 User Profile (from cv.md and research.md):
 {{{userProfile}}}
-
-First, you MUST use the 'getCompanyIntelligence' tool with the provided 'companyUrl' to get the company's name, mission, and key projects.
-Next, you MUST use the 'getJobDescription' tool with the same 'companyUrl' to scrape the full text of the job description.
-
-Once you have the company intelligence and the job description, synthesize all the information: the user's profile, the company's details, and the job requirements.
-
-Write a cover letter that is highly tailored to the job description, highlighting the user's most relevant skills and experiences. Directly reference the company's mission and/or key projects to show genuine interest.
-
-The final output should only be the text of the cover letter.
 
 Job Title: {{{jobTitle}}}
 Company/Job URL: {{{companyUrl}}}

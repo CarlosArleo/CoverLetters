@@ -69,7 +69,7 @@ const generateSubmissionEmailPrompt = ai.definePrompt({
   6.  Closing: End with a professional closing.
 
   TEXT FORMATTING REQUIREMENTS:
-  - Use proper paragraph breaks (double line breaks between paragraphs).
+  - Use proper paragraph breaks (double line breaks between paragraphs). Format with actual line breaks, not literal "\\n" characters. Make it copy-paste ready.
   - Include proper spacing after punctuation.
   - Format email addresses and contact details on separate lines if they appear in the closing.
   - Ensure clean, copy-paste ready output.

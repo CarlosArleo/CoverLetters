@@ -44,36 +44,10 @@ export async function GET(request: Request) {
     return NextResponse.json(contacts);
   } catch(error: any) {
     console.error("Error calling hunter tool:", error);
-     // Return a mock response if the API key is not set or another error occurs, so the app is still usable.
-    const mockContacts = {
-        data: {
-          domain: domain,
-          emails: [
-            {
-              value: `jane.doe@${domain}`,
-              first_name: 'Jane',
-              last_name: 'Doe',
-              position: 'CEO',
-              confidence: 95,
-            },
-            {
-              value: `s.smith@${domain}`,
-              first_name: 'Sam',
-              last_name: 'Smith',
-              position: 'CTO',
-              confidence: 92,
-            },
-            {
-              value: `recruiting@${domain}`,
-              first_name: null,
-              last_name: null,
-              position: 'Recruiting Department',
-              confidence: 88,
-            },
-          ],
-        },
-      };
-      return NextResponse.json(mockContacts, { status: 500, statusText: "Could not connect to contact discovery service. Using mock data."});
+    // If there is an error, return it to the client instead of using mock data.
+    return NextResponse.json(
+        { error: `Failed to fetch contacts: ${error.message}` },
+        { status: 500 }
+    );
   }
-
 }

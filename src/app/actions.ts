@@ -9,18 +9,19 @@ export async function generateCoverLetterAction(data: {
   jobTitle?: string;
 }) {
   try {
-    const [coverLetterResult, companyIntelligence] = await Promise.all([
-      coverLetterGenerator({
-        companyUrl: data.companyUrl,
-        jobTitle: data.jobTitle,
-      }),
-      getCompanyIntelligenceTool({
-        companyUrl: data.companyUrl,
-      }),
-    ]);
+    const result = await coverLetterGenerator({
+      companyUrl: data.companyUrl,
+      jobTitle: data.jobTitle,
+    });
     
+    // The company intelligence is now implicitly handled within the coverLetterGenerator flow.
+    // We can call it again here to get the data for the UI.
+    const companyIntelligence = await getCompanyIntelligenceTool({
+      companyUrl: data.companyUrl,
+    });
+
     return {
-      coverLetter: coverLetterResult.coverLetter,
+      coverLetter: result.coverLetter,
       companyIntelligence,
     };
   } catch (error) {

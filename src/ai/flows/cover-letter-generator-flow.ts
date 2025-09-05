@@ -6,7 +6,7 @@
  * @fileOverview Generates a personalized cover letter for a job application.
  *
  * - coverLetterGenerator - A function that generates the cover letter.
- * - CoverLetterGeneratorInput - The input type for the coverLetterGenerator function.
+ * - CoverLetterGeneratorInput - The input type for the coverLetterleSGenerator function.
  * - CoverLetterGeneratorOutput - The return type for the coverLetterGenerator function.
  */
 

@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'CoverCraft AI',
+  title: 'Strategic Application Engine',
   description: 'Generate hyper-personalized cover letters with the power of AI.',
 };
 

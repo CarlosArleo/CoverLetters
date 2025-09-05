@@ -30,13 +30,13 @@ const CoverLetterGeneratorOutputSchema = z.object({
 export type CoverLetterGeneratorOutput = z.infer<typeof CoverLetterGeneratorOutputSchema>;
 
 const getJobDescriptionTool = ai.defineTool({
-  name: 'getJobDescriptionTool',
+  name: 'getJobDescription',
   description: 'Scrapes a job posting URL to extract the full job description text.',
-  inputSchema: z.object({ jobUrl: z.string().url() }),
+  inputSchema: z.object({ url: z.string().url() }),
   outputSchema: z.string(),
-}, async ({ jobUrl }) => {
+}, async ({ url }) => {
   try {
-    const response = await fetch(jobUrl);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch job description: ${response.statusText}`);
     }
@@ -47,7 +47,7 @@ const getJobDescriptionTool = ai.defineTool({
   } catch (error: any) {
     console.error('Error in getJobDescriptionTool:', error);
     // Return a message indicating failure, which the main prompt can handle.
-    return `Failed to retrieve job description from ${jobUrl}. Please check the URL.`;
+    return `Failed to retrieve job description from ${url}. Please check the URL.`;
   }
 });
 
@@ -59,26 +59,28 @@ const prompt = ai.definePrompt({
   name: 'coverLetterPrompt',
   input: {schema: z.object({
     userProfile: z.string(),
-    companyName: z.string(),
-    companyMission: z.string(),
-    companyKeyProjects: z.string(),
-    jobDescription: z.string(),
-    jobTitle: z.string().optional(),
     companyUrl: z.string(),
+    jobTitle: z.string().optional(),
   })},
   output: {schema: CoverLetterGeneratorOutputSchema},
   tools: [getCompanyIntelligenceTool, getJobDescriptionTool],
-  prompt: `You are an expert cover letter writer. Use the provided information to create a compelling and personalized cover letter.
+  prompt: `You are an expert cover letter writer. Your task is to generate a personalized and compelling cover letter based on the provided user profile and job details.
 
-  User Profile (from cv.md and research.md): {{{userProfile}}}
-  Company Information (from getCompanyIntelligenceTool): Name: {{{companyName}}}, Mission: {{{companyMission}}}, Key Projects: {{{companyKeyProjects}}}.
-  Job Description: {{{jobDescription}}}
+User Profile (from cv.md and research.md):
+{{{userProfile}}}
 
-  Write a cover letter that is tailored to the job description and highlights the user's relevant skills and experience. Make sure to include information about the company's mission and key projects.
-  Job Title: {{{jobTitle}}}
-  Company URL: {{{companyUrl}}}
-  `,
-  system: `You are an expert at writing cover letters. You will be given a user profile and a job title. You MUST use the getCompanyIntelligenceTool to learn about the company and the getJobDescriptionTool to get the full job description from the provided URL. Your goal is to write a cover letter that is tailored to the job description and highlights the user's relevant skills and experience.`,
+First, you MUST use the 'getCompanyIntelligence' tool with the provided 'companyUrl' to get the company's name, mission, and key projects.
+Next, you MUST use the 'getJobDescription' tool with the same 'companyUrl' to scrape the full text of the job description.
+
+Once you have the company intelligence and the job description, synthesize all the information: the user's profile, the company's details, and the job requirements.
+
+Write a cover letter that is highly tailored to the job description, highlighting the user's most relevant skills and experiences. Directly reference the company's mission and/or key projects to show genuine interest.
+
+The final output should only be the text of the cover letter.
+
+Job Title: {{{jobTitle}}}
+Company/Job URL: {{{companyUrl}}}
+`,
 });
 
 const coverLetterGeneratorFlow = ai.defineFlow(
@@ -95,18 +97,9 @@ const coverLetterGeneratorFlow = ai.defineFlow(
     const researchContent = readFileSync(researchPath, 'utf-8');
     const userProfile = cvContent + '\n' + researchContent;
 
-    // The AI will call the tools as needed based on the system prompt.
-    // We get company intelligence and job description via tools.
-    const companyIntelligence = await getCompanyIntelligenceTool({ companyUrl: input.companyUrl });
-    const jobDescription = await getJobDescriptionTool({ jobUrl: input.companyUrl });
-
     const {output} = await prompt({
       ...input,
       userProfile,
-      companyName: companyIntelligence.companyName,
-      companyMission: companyIntelligence.companyMission,
-      companyKeyProjects: companyIntelligence.keyProjects,
-      jobDescription,
     });
 
     return output!;

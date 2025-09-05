@@ -114,6 +114,7 @@ export function CoverCraftApp() {
       </div>
       <div className="lg:col-span-4">
         <OutreachColumn
+          companyIntelligence={companyIntelligence}
           contacts={contacts}
           submissionEmail={submissionEmail}
           isContactsLoading={isContactsLoading}

@@ -1,13 +1,14 @@
 'use client';
 
-import type { Contact, SubmissionEmail } from '@/lib/types';
+import type { CompanyIntelligence, Contact, SubmissionEmail } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AtSign, Copy, Loader2, Mail, Users } from 'lucide-react';
+import { AtSign, Copy, Info, Loader2, Mail, Users } from 'lucide-react';
 import { Separator } from '../ui/separator';
 
 interface OutreachColumnProps {
+  companyIntelligence: CompanyIntelligence | null;
   contacts: Contact[];
   submissionEmail: SubmissionEmail | null;
   isContactsLoading: boolean;
@@ -18,6 +19,7 @@ interface OutreachColumnProps {
 }
 
 export function OutreachColumn({
+  companyIntelligence,
   contacts,
   submissionEmail,
   isContactsLoading,
@@ -26,8 +28,46 @@ export function OutreachColumn({
   onGenerateEmail,
   copyToClipboard,
 }: OutreachColumnProps) {
+  const isLoading = isContactsLoading || isEmailLoading;
   return (
     <div className="space-y-8 sticky top-8">
+       <Card>
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl flex items-center gap-2">
+            <Info /> Company Intelligence
+          </CardTitle>
+          <CardDescription>Key details about the target company.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading && !companyIntelligence ? (
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ) : companyIntelligence ? (
+            <div className="space-y-4 text-sm">
+              <div>
+                <h4 className="font-semibold">Company Name</h4>
+                <p className="text-muted-foreground">{companyIntelligence.companyName}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Mission</h4>
+                <p className="text-muted-foreground">{companyIntelligence.companyMission}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Key Projects</h4>
+                <p className="text-muted-foreground">{companyIntelligence.keyProjects}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-center text-muted-foreground py-4">
+              Company details will appear here.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center gap-2">

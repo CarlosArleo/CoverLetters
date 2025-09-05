@@ -31,61 +31,59 @@ export type GetCompanyIntelligenceOutput = z.infer<
   typeof GetCompanyIntelligenceOutputSchema
 >;
 
+const companyIntelPrompt = ai.definePrompt({
+  name: 'companyIntelligencePrompt',
+  input: {schema: z.object({textContent: z.string()})},
+  output: {schema: GetCompanyIntelligenceOutputSchema},
+  prompt: `You are an AI expert in understanding company information.
+
+Given the following text content extracted from a company's website (including their home and about pages), extract the company's name, its mission statement, and any key projects or products mentioned.
+
+Text Content:
+{{{textContent}}}
+`,
+});
+
 export const getCompanyIntelligenceTool =
   ai.defineTool(
     {
       name: 'getCompanyIntelligence',
-      description: 'Retrieves company name, mission, and key projects from a company website.',
+      description: 'Retrieves company name, mission, and key projects from a company website by scraping its home and "about us" pages.',
       inputSchema: GetCompanyIntelligenceInputSchema,
       outputSchema: GetCompanyIntelligenceOutputSchema,
     },
     async input => {
       try {
         const aboutUsUrl = new URL('/about', input.companyUrl).toString();
-        const homePageResponse = await fetch(input.companyUrl);
-        const aboutUsResponse = await fetch(aboutUsUrl);
+        
+        const [homePageResponse, aboutUsResponse] = await Promise.all([
+          fetch(input.companyUrl),
+          fetch(aboutUsUrl).catch(e => {
+            console.warn(`Could not fetch about page at ${aboutUsUrl}, proceeding without it.`);
+            return null;
+          })
+        ]);
 
         if (!homePageResponse.ok) {
           throw new Error(
             `Failed to fetch home page: ${homePageResponse.statusText}`
           );
         }
-
-        if (!aboutUsResponse.ok) {
-          console.warn(
-            `Failed to fetch about us page: ${aboutUsResponse.statusText}. Trying to extract the information only from the home page.`
-          );
-        }
-
+        
         const homePageHtml = await homePageResponse.text();
-        const aboutUsHtml = aboutUsResponse.ok
+        const aboutUsHtml = (aboutUsResponse && aboutUsResponse.ok)
           ? await aboutUsResponse.text()
           : '';
 
         const homePageDom = new JSDOM(homePageHtml);
-        const aboutUsDom = new JSDOM(aboutUsHtml);
+        const aboutUsDom = aboutUsHtml ? new JSDOM(aboutUsHtml) : null;
 
         const combinedText = `${
-          homePageDom.window.document.body?.textContent
-        }\n${aboutUsDom.window.document.body?.textContent}`;
-
-        const prompt = ai.definePrompt({
-          name: 'companyIntelligencePrompt',
-          input: {schema: z.object({textContent: z.string()})},
-          output: {schema: GetCompanyIntelligenceOutputSchema},
-          prompt: `You are an AI expert in understanding company information.
-
-Given the following text content extracted from a company's website, extract the company's name, mission, and key projects.
-
-Text Content: {{{textContent}}}
-
-Company Name:
-Company Mission:
-Key Projects: `,
-        });
-
-        const {output} = await prompt({
-          textContent: combinedText,
+          homePageDom.window.document.body?.textContent || ''
+        }\n${aboutUsDom?.window.document.body?.textContent || ''}`;
+        
+        const {output} = await companyIntelPrompt({
+          textContent: combinedText.trim(),
         });
 
         return output!;

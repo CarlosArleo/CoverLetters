@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -66,6 +67,14 @@ const generateSubmissionEmailPrompt = ai.definePrompt({
   4.  Reference Attachments: Clearly state that the attached cover letter and CV provide comprehensive details.
   5.  The "Ask": Use collaborative language to request a brief conversation. For example: "I'd welcome the opportunity for a brief conversation about how my expertise might complement your current initiatives." or "I'd love to discuss how my background in [Relevant Area] could contribute to [Company Name]'s innovative work."
   6.  Closing: End with a professional closing.
+
+  TEXT FORMATTING REQUIREMENTS:
+  - Use proper paragraph breaks (double line breaks between paragraphs).
+  - Include proper spacing after punctuation.
+  - Format email addresses and contact details on separate lines if they appear in the closing.
+  - Ensure clean, copy-paste ready output.
+  - Add line breaks before and after key sections (greeting, body paragraphs, closing).
+  - Use consistent spacing throughout.
 
   Your final output must be a JSON object with two keys: "subject" and "body".
   `,
